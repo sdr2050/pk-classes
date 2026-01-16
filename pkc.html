@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PK Physics Growth Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Energetic & Playful (Blue #1e3a8a, Yellow #fbbf24, Red #ef4444, White #ffffff, Slate #f8fafc) -->
+    <!-- Application Structure Plan: The SPA is designed as a 'Command Center' dashboard. It is divided into four functional tabs: 
+         1. 'Strategy Core': Visualizes the growth funnel and upload schedule using charts to establish the baseline routine.
+         2. 'AI Creator Lab': Integrates Gemini API to operationalize the 'Hook' and 'Title' advice from the report, turning theory into generated content.
+         3. 'Packaging Studio': An interactive 'Before & After' visualizer for thumbnails and titles to teach the 'Rule of Three'.
+         4. 'Tech & Tribe': A checklist and interaction guide for technical upgrades and community management.
+         This structure moves from high-level strategy to specific creation tools, then to packaging, and finally technical execution. -->
+    <!-- Visualization & Content Choices:
+         1. Content Mix (Source: Section 2) -> Goal: Inform/Proportion -> Viz: Donut Chart -> Justification: Shows the balance between Discovery (Shorts) and Authority (Long-form).
+         2. Weekly Schedule (Source: Section 2) -> Goal: Organize/Time -> Viz: Bar Chart -> Justification: Visualizes the daily workload and consistency required.
+         3. Thumbnail Logic (Source: Section 3) -> Goal: Compare -> Viz: Interactive HTML Toggle -> Justification: Direct visual comparison of 'Bad' vs 'Good' is more effective than text for design concepts. No SVG used.
+         4. Tech Audit (Source: Section 4) -> Goal: Organize -> Viz: Interactive Checklist -> Justification: Actionable list for equipment and settings.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1e293b;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            max-height: 400px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #fbbf24;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .nav-item.active {
+            border-bottom: 3px solid #fbbf24;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+        .interactive-card:hover {
+            transform: translateY(-4px);
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 bg-blue-900 text-yellow-400 rounded-full flex items-center justify-center font-bold text-xl mr-3 shadow-sm">PK</div>
+                    <div>
+                        <h1 class="text-xl font-bold text-blue-900 tracking-tight">Growth Command Center</h1>
+                        <p class="text-xs text-gray-500">Mastering Physics for NEET/JEE</p>
+                    </div>
+                </div>
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex space-x-8">
+                    <button onclick="switchTab('strategy')" id="nav-strategy" class="nav-item active px-1 pt-1 text-sm font-medium text-gray-500 hover:text-blue-700 transition">Strategy Core</button>
+                    <button onclick="switchTab('ai-lab')" id="nav-ai-lab" class="nav-item px-1 pt-1 text-sm font-medium text-gray-500 hover:text-blue-700 transition">✨ AI Creator Lab</button>
+                    <button onclick="switchTab('packaging')" id="nav-packaging" class="nav-item px-1 pt-1 text-sm font-medium text-gray-500 hover:text-blue-700 transition">Packaging Studio</button>
+                    <button onclick="switchTab('tech')" id="nav-tech" class="nav-item px-1 pt-1 text-sm font-medium text-gray-500 hover:text-blue-700 transition">Tech & Tribe</button>
+                </nav>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-gray-500 hover:text-blue-900 focus:outline-none">
+                        <span class="text-2xl font-bold">☰</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="switchTab('strategy')" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 w-full text-left">Strategy Core</button>
+                <button onclick="switchTab('ai-lab')" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 w-full text-left">✨ AI Creator Lab</button>
+                <button onclick="switchTab('packaging')" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 w-full text-left">Packaging Studio</button>
+                <button onclick="switchTab('tech')" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 w-full text-left">Tech & Tribe</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- TAB 1: STRATEGY CORE -->
+        <div id="strategy" class="tab-content active">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-blue-900 mb-2">The Strategic Foundation</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    To reach 11k+ subscribers, we shift from random uploads to a disciplined <strong>Content Funnel</strong>.
+                    This section visualizes your new operational rhythm.
+                </p>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <!-- Funnel Chart Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-600 interactive-card">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">The Content Funnel Mix</h3>
+                    <p class="text-sm text-gray-500 mb-4 h-10">
+                        Visualizing how different content types work together to drive Discovery, Authority, and Retention.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="funnelChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                        <strong>Key Insight:</strong> Shorts (Red) drive new traffic, while Long-form (Blue) builds the trust needed for NEET/JEE prep.
+                    </div>
+                </div>
+
+                <!-- Schedule Chart Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-yellow-500 interactive-card">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Weekly Upload Cadence</h3>
+                    <p class="text-sm text-gray-500 mb-4 h-10">
+                        Your new anchor schedule. Consistency allows the algorithm to predict your value.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="scheduleChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-4 bg-yellow-50 rounded-lg text-sm text-yellow-900">
+                        <strong>Action:</strong> Lock in Mon/Wed/Fri at 6 PM for lectures. Use weekends for planning.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Series Ideas Section -->
+            <div class="bg-white rounded-xl shadow-md p-8">
+                <h3 class="text-2xl font-bold text-blue-900 mb-6 border-b pb-2">High-Value Series Roadmap</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-5 bg-slate-50 rounded-lg hover:bg-white hover:shadow-md transition">
+                        <div class="text-3xl mb-2">⚡</div>
+                        <h4 class="font-bold text-gray-800 mb-2">Physics Myths</h4>
+                        <p class="text-sm text-gray-600">Debunk common misconceptions. Example: "Centrifugal Force isn't real?" Highly clickable.</p>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-lg hover:bg-white hover:shadow-md transition">
+                        <div class="text-3xl mb-2">🗺️</div>
+                        <h4 class="font-bold text-gray-800 mb-2">The Roadmap</h4>
+                        <p class="text-sm text-gray-600">Strategy videos like "Score 95+ in 30 Days". Students love planning as much as studying.</p>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-lg hover:bg-white hover:shadow-md transition">
+                        <div class="text-3xl mb-2">📝</div>
+                        <h4 class="font-bold text-gray-800 mb-2">Derivation Express</h4>
+                        <p class="text-sm text-gray-600">5-minute focused videos on single derivations. Perfect for Board exam search traffic.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: AI CREATOR LAB -->
+        <div id="ai-lab" class="tab-content">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-blue-900 mb-2">✨ AI Creator Lab</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Turn the report's advice into instant content. Use Gemini AI to generate hooks, titles, scripts, and image prompts.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Hook Generator -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">🪝 The "Zero-Second" Hook</h3>
+                    <p class="text-xs text-gray-500 mb-4">Generates a pattern-interrupt opening script based on the report's "Problem First" strategy.</p>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Physics Topic:</label>
+                    <div class="flex space-x-2 mb-4">
+                        <input type="text" id="hookTopic" placeholder="e.g. Rotational Motion" class="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button onclick="generateHook()" id="btnHook" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition flex items-center">
+                            <span class="loader hidden mr-2" id="loaderHook"></span> Generate
+                        </button>
+                    </div>
+                    <div id="resHook" class="bg-slate-100 p-4 rounded-lg min-h-[100px] text-sm text-gray-700 italic border border-slate-200">
+                        AI output will appear here...
+                    </div>
+                </div>
+
+                <!-- Title Optimizer -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-600">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">🔍 SEO Title Optimizer</h3>
+                    <p class="text-xs text-gray-500 mb-4">Applies the "SEO + Curiosity" formula (e.g., "Stop Making THESE Mistakes").</p>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Boring Title:</label>
+                    <div class="flex space-x-2 mb-4">
+                        <input type="text" id="titleInput" placeholder="e.g. Optics Lecture 1" class="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button onclick="optimizeTitle()" id="btnTitle" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition flex items-center">
+                            <span class="loader hidden mr-2" id="loaderTitle"></span> Optimize
+                        </button>
+                    </div>
+                    <div id="resTitle" class="bg-slate-100 p-4 rounded-lg min-h-[100px] text-sm text-gray-700 italic border border-slate-200">
+                        AI output will appear here...
+                    </div>
+                </div>
+
+                <!-- Concept Simplifier -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">💡 Script Simplifier</h3>
+                    <p class="text-xs text-gray-500 mb-4">Translates dense textbook definitions into simple "Explain Like I'm 5" scripts.</p>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Complex Concept:</label>
+                    <textarea id="conceptInput" placeholder="Paste a complex definition here..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none mb-3 h-20"></textarea>
+                    <button onclick="simplifyConcept()" id="btnConcept" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition flex items-center justify-center">
+                        <span class="loader hidden mr-2" id="loaderConcept"></span> Simplify for Video
+                    </button>
+                    <div id="resConcept" class="mt-4 bg-slate-100 p-4 rounded-lg min-h-[80px] text-sm text-gray-700 italic border border-slate-200">
+                        AI output will appear here...
+                    </div>
+                </div>
+
+                <!-- Image Prompter -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-600">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">🖼️ Thumbnail Art Director</h3>
+                    <p class="text-xs text-gray-500 mb-4">Generates a detailed prompt for AI image generators (Midjourney/DALL-E) to create cinematic backgrounds.</p>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Video Subject:</label>
+                    <div class="flex space-x-2 mb-4">
+                        <input type="text" id="imageInput" placeholder="e.g. Magnetism" class="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button onclick="generateImagePrompt()" id="btnImage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition flex items-center">
+                            <span class="loader hidden mr-2" id="loaderImage"></span> Create Prompt
+                        </button>
+                    </div>
+                    <div id="resImage" class="bg-slate-100 p-4 rounded-lg min-h-[100px] text-sm text-gray-700 italic border border-slate-200">
+                        AI output will appear here...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: PACKAGING STUDIO -->
+        <div id="packaging" class="tab-content">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-blue-900 mb-2">Packaging Studio</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    CTR is the most important metric. Use this visual guide to master the "Rule of Three" for thumbnails.
+                </p>
+            </div>
+
+            <!-- Thumbnail Simulator -->
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-12">
+                <div class="p-6 border-b">
+                    <h3 class="text-xl font-bold text-gray-800">Thumbnail Analyzer: The "Rule of Three"</h3>
+                    <p class="text-sm text-gray-500">Toggle between the common mistake and the optimized version.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    <div class="p-8 bg-gray-100 flex flex-col items-center justify-center border-r border-gray-200">
+                        <div class="flex space-x-4 mb-6">
+                            <button onclick="setThumb('bad')" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-bold text-gray-700 transition">Old Style</button>
+                            <button onclick="setThumb('good')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold text-white shadow-lg transition">Optimized</button>
+                        </div>
+                        <div id="thumb-display" class="w-full aspect-video bg-white shadow-2xl rounded-lg overflow-hidden relative border-4 transition-all duration-300 border-transparent">
+                            <!-- JS Injects Content Here -->
+                        </div>
+                    </div>
+                    <div class="p-8 bg-white flex flex-col justify-center">
+                        <h4 class="font-bold text-lg text-blue-900 mb-3" id="thumb-title">Analysis</h4>
+                        <p class="text-gray-600 text-sm leading-relaxed" id="thumb-desc">
+                            Select a style to see the analysis.
+                        </p>
+                        <div class="mt-6 p-4 bg-yellow-50 rounded border border-yellow-200">
+                            <h5 class="font-bold text-yellow-800 text-sm mb-1">Pro Tip:</h5>
+                            <p class="text-yellow-900 text-xs">Always use high-contrast colors (Yellow text on Black/Blue) and a face showing strong emotion (Shock/Focus).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title Formula Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-gray-800">
+                    <div class="text-4xl font-bold text-gray-200 mb-2">01</div>
+                    <h4 class="font-bold text-gray-800">SEO Keywords</h4>
+                    <p class="text-sm text-gray-600 mt-2">"Rotational Motion", "Class 11", "NEET". This helps the video appear in search.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-red-500">
+                    <div class="text-4xl font-bold text-red-100 mb-2">02</div>
+                    <h4 class="font-bold text-gray-800">Curiosity Gap</h4>
+                    <p class="text-sm text-gray-600 mt-2">"Stop Making THIS Mistake" or "The Trick You Missed". Makes them click.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
+                    <div class="text-4xl font-bold text-blue-100 mb-2">03</div>
+                    <h4 class="font-bold text-gray-800">Audience Label</h4>
+                    <p class="text-sm text-gray-600 mt-2">"(NEET/JEE/Boards)". Tells the viewer exactly who this video is for immediately.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: TECH & TRIBE -->
+        <div id="tech" class="tab-content">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-blue-900 mb-2">Tech & Tribe</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    High-quality production retains viewers, and community engagement retains subscribers.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Tech Audit -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="text-2xl mr-2">🎙️</span> Technical Audit
+                    </h3>
+                    <div class="space-y-4">
+                        <label class="flex items-start space-x-3 p-3 rounded hover:bg-gray-50 cursor-pointer transition">
+                            <input type="checkbox" class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mt-1">
+                            <div>
+                                <span class="font-bold text-gray-800 block">Audio Clarity (Critical)</span>
+                                <span class="text-xs text-gray-500">Using Lapel Mic (Boya BY-M1) & minimal echo room.</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start space-x-3 p-3 rounded hover:bg-gray-50 cursor-pointer transition">
+                            <input type="checkbox" class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mt-1">
+                            <div>
+                                <span class="font-bold text-gray-800 block">Visual Legibility</span>
+                                <span class="text-xs text-gray-500">No glare on whiteboard. Handwriting is large and clear.</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start space-x-3 p-3 rounded hover:bg-gray-50 cursor-pointer transition">
+                            <input type="checkbox" class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mt-1">
+                            <div>
+                                <span class="font-bold text-gray-800 block">Search Optimization</span>
+                                <span class="text-xs text-gray-500">Chapters/Timestamps added in description for SEO.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Community Hacks -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <span class="text-2xl mr-2">🤝</span> Community Algorithms
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 h-6 w-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-1">1</div>
+                            <div class="ml-4">
+                                <h4 class="text-sm font-bold text-gray-900">The "Golden Hour" Reply</h4>
+                                <p class="text-sm text-gray-600">Reply to EVERY comment in the first 2 hours. Signals "Hot Video" to YouTube.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 h-6 w-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center font-bold text-xs mt-1">2</div>
+                            <div class="ml-4">
+                                <h4 class="text-sm font-bold text-gray-900">Poll Power</h4>
+                                <p class="text-sm text-gray-600">Daily polls: "Which chapter next?" Keeps you in the feed even without uploads.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 h-6 w-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-xs mt-1">3</div>
+                            <div class="ml-4">
+                                <h4 class="text-sm font-bold text-gray-900">End Screen Bridge</h4>
+                                <p class="text-sm text-gray-600">Direct verbal call-to-action pointing to the next specific video on the end screen.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-blue-900 font-bold mb-2">PK Physics Classes Growth Plan</p>
+            <p class="text-gray-500 text-sm">Powered by Gemini AI • Built for Educational Excellence</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // --- API CONFIGURATION ---
+        const apiKey = ""; // Provided by environment at runtime
+
+        // --- GEMINI API CALLER ---
+        async function geminiCall(prompt, systemPrompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            for (let i = 0; i < 3; i++) { // Retry logic (3 times)
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) throw new Error('API Error');
+                    
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+                } catch (error) {
+                    console.error("Attempt " + (i+1) + " failed.");
+                    if (i === 2) return "Could not connect to AI. Please try again later.";
+                    await new Promise(res => setTimeout(res, 1000 * (i + 1))); // Simple backoff
+                }
+            }
+        }
+
+        // --- AI FEATURE FUNCTIONS ---
+        
+        async function generateHook() {
+            const topic = document.getElementById('hookTopic').value;
+            if (!topic) return;
+            toggleLoader('loaderHook', 'btnHook', true);
+            const resDiv = document.getElementById('resHook');
+            resDiv.innerHTML = "Crafting hook...";
+            
+            const system = "You are a YouTube expert for Indian NEET/JEE Physics. Write a 'Zero-Second Hook' (Pattern Interrupt) script. It must be under 15 seconds. Start with a challenging question, a common mistake, or a surprising fact. Tone: Energetic and authoritative.";
+            const prompt = `Topic: ${topic}. Write a hook script.`;
+            
+            const result = await geminiCall(prompt, system);
+            resDiv.innerHTML = result.replace(/\n/g, '<br>');
+            toggleLoader('loaderHook', 'btnHook', false);
+        }
+
+        async function optimizeTitle() {
+            const oldTitle = document.getElementById('titleInput').value;
+            if (!oldTitle) return;
+            toggleLoader('loaderTitle', 'btnTitle', true);
+            const resDiv = document.getElementById('resTitle');
+            resDiv.innerHTML = "Optimizing...";
+            
+            const system = "You are a YouTube SEO expert. Rewrite the title using the 'Rule of Three': Keywords + Curiosity Gap + Audience Label (NEET/JEE). Provide 2 high-CTR options.";
+            const prompt = `Original Title: ${oldTitle}. Rewrite it.`;
+            
+            const result = await geminiCall(prompt, system);
+            resDiv.innerHTML = result.replace(/\n/g, '<br>');
+            toggleLoader('loaderTitle', 'btnTitle', false);
+        }
+
+        async function simplifyConcept() {
+            const concept = document.getElementById('conceptInput').value;
+            if (!concept) return;
+            toggleLoader('loaderConcept', 'btnConcept', true);
+            const resDiv = document.getElementById('resConcept');
+            resDiv.innerHTML = "Simplifying...";
+            
+            const system = "You are a Physics teacher explaining to a high school student. Simplify this complex text into a short, conversational script using an analogy. Keep it under 50 words.";
+            const prompt = `Simplify: ${concept}`;
+            
+            const result = await geminiCall(prompt, system);
+            resDiv.innerHTML = result.replace(/\n/g, '<br>');
+            toggleLoader('loaderConcept', 'btnConcept', false);
+        }
+
+        async function generateImagePrompt() {
+            const topic = document.getElementById('imageInput').value;
+            if (!topic) return;
+            toggleLoader('loaderImage', 'btnImage', true);
+            const resDiv = document.getElementById('resImage');
+            resDiv.innerHTML = "Imagining...";
+            
+            const system = "You are an AI Art Director. Write a Midjourney/DALL-E prompt for a YouTube thumbnail background. Theme: Physics, Cinematic Lighting, High Contrast, 4k, Vibrant Colors (Blue/Yellow). No text in the image.";
+            const prompt = `Topic: ${topic}`;
+            
+            const result = await geminiCall(prompt, system);
+            resDiv.innerHTML = result.replace(/\n/g, '<br>');
+            toggleLoader('loaderImage', 'btnImage', false);
+        }
+
+        function toggleLoader(loaderId, btnId, isLoading) {
+            const loader = document.getElementById(loaderId);
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                loader.classList.remove('hidden');
+                btn.disabled = true;
+                btn.classList.add('opacity-75');
+            } else {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
+            }
+        }
+
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update Nav Styles
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Check if nav button exists (mobile vs desktop)
+            const desktopBtn = document.getElementById('nav-' + tabId);
+            if (desktopBtn) desktopBtn.classList.add('active');
+
+            // Hide mobile menu if open
+            document.getElementById('mobile-menu').classList.add('hidden');
+        }
+
+        // --- THUMBNAIL SIMULATOR LOGIC ---
+        function setThumb(state) {
+            const display = document.getElementById('thumb-display');
+            const title = document.getElementById('thumb-title');
+            const desc = document.getElementById('thumb-desc');
+            
+            if (state === 'bad') {
+                display.style.borderColor = '#ef4444';
+                display.innerHTML = `
+                    <div class="w-full h-full bg-white flex flex-col items-center justify-center p-4 relative">
+                        <div class="absolute inset-0 bg-gray-50 opacity-50"></div>
+                        <h2 class="relative z-10 text-gray-800 font-serif text-center text-sm mb-2">Physics Class 11<br>Chapter 7: Rotational Motion<br>Full Lecture Part 1</h2>
+                        <div class="relative z-10 text-xs text-blue-500 underline">www.pkphysics.com</div>
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-400">1:45:00</div>
+                    </div>
+                `;
+                title.innerHTML = "Analysis: <span class='text-red-600'>Low CTR Risk</span>";
+                desc.innerHTML = "<strong>Problems:</strong> Too much text, boring font, no emotional hook, no face, low contrast. Hard to read on mobile screens.";
+            } else {
+                display.style.borderColor = '#22c55e';
+                display.innerHTML = `
+                    <div class="w-full h-full bg-slate-900 flex flex-col justify-between p-4 relative overflow-hidden">
+                        <!-- Abstract Background -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-900 to-black"></div>
+                        <div class="absolute right-0 top-0 w-32 h-32 bg-yellow-500 opacity-20 rounded-full blur-2xl"></div>
+                        
+                        <!-- Content -->
+                        <div class="relative z-10 flex flex-col h-full justify-between">
+                            <span class="bg-yellow-400 text-black font-extrabold px-2 py-1 text-xs w-max rounded">NEET 2026</span>
+                            
+                            <div class="mt-2">
+                                <h1 class="text-white font-extrabold text-3xl leading-none drop-shadow-md">
+                                    STOP<br><span class="text-red-500">FAILING!</span>
+                                </h1>
+                            </div>
+                            
+                            <!-- Implied Face Location -->
+                            <div class="absolute bottom-0 right-0 w-24 h-24 bg-gray-700 rounded-full border-2 border-white flex items-center justify-center text-white text-xs text-center opacity-80">
+                                [Photo:<br>Shocked<br>Face]
+                            </div>
+                        </div>
+                    </div>
+                `;
+                title.innerHTML = "Analysis: <span class='text-green-600'>High CTR Potential</span>";
+                desc.innerHTML = "<strong>Wins:</strong> 'Rule of Three' applied (Keyword, Hook, Audience). High contrast (Yellow/Black). Emotional trigger (Stop Failing).";
+            }
+        }
+
+        // --- CHART HELPER FUNCTIONS ---
+        function wrapLabel(label) {
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + " " + words[i]).length <= 16) {
+                    currentLine += " " + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines.length === 1 ? lines[0] : lines;
+        }
+
+        // --- CHART INITIALIZATION ---
+        window.addEventListener('load', () => {
+            // Tooltip Config for Multi-line labels
+            const tooltipConfig = {
+                callbacks: {
+                    title: function(tooltipItems) {
+                        const item = tooltipItems[0];
+                        let label = item.chart.data.labels[item.dataIndex];
+                        if (Array.isArray(label)) {
+                            return label.join(' ');
+                        } else {
+                            return label;
+                        }
+                    }
+                }
+            };
+
+            // 1. Funnel Chart (Donut)
+            const ctxFunnel = document.getElementById('funnelChart').getContext('2d');
+            new Chart(ctxFunnel, {
+                type: 'doughnut',
+                data: {
+                    labels: [wrapLabel('Discovery (Shorts)'), wrapLabel('Authority (Long-form)'), wrapLabel('Retention (Community)')],
+                    datasets: [{
+                        data: [50, 30, 20], // Implied proportions based on frequency/impact
+                        backgroundColor: ['#ef4444', '#1e3a8a', '#fbbf24'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: tooltipConfig,
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // 2. Schedule Chart (Bar)
+            const ctxSchedule = document.getElementById('scheduleChart').getContext('2d');
+            new Chart(ctxSchedule, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Long Form',
+                            data: [1, 0, 1, 0, 1, 0, 0], // Mon, Wed, Fri
+                            backgroundColor: '#1e3a8a',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Shorts',
+                            data: [1, 1, 0, 1, 0, 1, 0], // Gap fill strategy
+                            backgroundColor: '#ef4444',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Community',
+                            data: [1, 1, 1, 1, 1, 1, 1], // Daily
+                            backgroundColor: '#fbbf24',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true, 
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        tooltip: tooltipConfig,
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Init Default Thumbnail
+            setThumb('bad');
+        });
+    </script>
+</body>
+</html>
